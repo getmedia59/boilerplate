@@ -1,10 +1,9 @@
 'use client'
 
-import React, { ReactNode, useEffect, useState } from 'react'
+import React, { ReactNode } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { User } from '@supabase/supabase-js'
 import { Container } from '@/components/ui/container'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useProfile } from '@/lib/hooks'
 
 interface LayoutProps {
   children: ReactNode
@@ -22,24 +22,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
+  const { profile, loading, user, isAdmin } = useProfile()
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -63,7 +46,9 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              {!user ? (
+              {loading ? (
+                <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+              ) : !user ? (
                 <>
                   <Link href="/auth/login" className="text-gray-600 hover:text-gray-800">
                     Login
@@ -76,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
                 <DropdownMenu>
                   <DropdownMenuTrigger className="focus:outline-none">
                     <Avatar>
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarImage src={user.user_metadata?.avatar_url || profile?.avatar_url} />
                       <AvatarFallback>{getUserInitials(user.email)}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
@@ -87,6 +72,15 @@ export default function Layout({ children }: LayoutProps) {
                       <Link href="/profile">Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>Settings</DropdownMenuItem>
+                    {isAdmin && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Administration</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin">Admin Dashboard</Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-red-600 focus:text-red-600"
