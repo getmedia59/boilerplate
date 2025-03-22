@@ -1,7 +1,10 @@
-import React, { ReactNode } from 'react'
+'use client'
+
+import React, { ReactNode, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
 
 interface LayoutProps {
   children: ReactNode
@@ -9,6 +12,24 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+
+    getUser()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -26,23 +47,28 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/auth/login" className="text-gray-600 hover:text-gray-800">
-                Login
-              </Link>
-              <Link href="/auth/register" className="text-gray-600 hover:text-gray-800">
-                Register
-              </Link>
-              <button
-                onClick={handleSignOut}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                Sign Out
-              </button>
+              {!user ? (
+                <>
+                  <Link href="/auth/login" className="text-gray-600 hover:text-gray-800">
+                    Login
+                  </Link>
+                  <Link href="/auth/register" className="text-gray-600 hover:text-gray-800">
+                    Register
+                  </Link>
+                </>
+              ) : (
+                <button
+                  onClick={handleSignOut}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="flex-1">
         {children}
       </main>
     </div>

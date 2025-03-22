@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
-import Layout from '@/components/Layout'
 
 export default function HomePage() {
   const [user, setUser] = useState<User | null>(null)
@@ -34,33 +33,29 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-xl">Loading...</div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
     )
   }
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {user ? (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h1 className="text-2xl font-bold mb-4">Welcome, {user.email}!</h1>
-            <p className="text-gray-600">
-              You are successfully logged in. This is your protected dashboard area.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h1 className="text-2xl font-bold mb-4">Welcome to Our App</h1>
-            <p className="text-gray-600">
-              Please sign in to access your dashboard and start using our services.
-            </p>
-          </div>
-        )}
-      </div>
-    </Layout>
+    <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      {user ? (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold mb-4">Welcome, {user.email}!</h1>
+          <p className="text-gray-600">
+            You are successfully logged in. This is your protected dashboard area.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white shadow rounded-lg p-6">
+          <h1 className="text-2xl font-bold mb-4">Welcome to Our App</h1>
+          <p className="text-gray-600">
+            Please sign in to access your dashboard and start using our services.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
